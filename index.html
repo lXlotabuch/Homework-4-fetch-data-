@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .root {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      dl > dt {
+        font-size: 40px;
+        text-transform: uppercase;
+        text-align: center;
+      }
+
+      dl > dd {
+        text-align: center;
+      }
+
+      dl > .episode {
+        font-size: 30px;
+      }
+
+      .lds-circle {
+        display: inline-block;
+        transform: translateZ(1px);
+        text-align: center;
+        width: 100%;
+      }
+      .lds-circle > div {
+        display: inline-block;
+        width: 64px;
+        height: 64px;
+        margin: 8px;
+        border-radius: 50%;
+        background: gray;
+        animation: lds-circle 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+      }
+      @keyframes lds-circle {
+        0%,
+        100% {
+          animation-timing-function: cubic-bezier(0.5, 0, 1, 0.5);
+        }
+        0% {
+          transform: rotateY(0deg);
+        }
+        50% {
+          transform: rotateY(1800deg);
+          animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1);
+        }
+        100% {
+          transform: rotateY(3600deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 1. AJAX - це асинхронні запроси які дозволяють звертатись до сервера в моменти коли сторінка вже завантажилась.-->
+
+    <div id="root"></div>
+
+    <script>
+      const root = document.querySelector("#root");
+      let url = "https://swapi.dev/api/films/";
+
+      getFilms();
+
+      function getFilms() {
+        fetch(url)
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data.results);
+            renderFilms(data.results);
+          });
+      }
+
+      function renderFilms(data) {
+        data.forEach((el) => {
+          const list = document.createElement("dl");
+          const listFilm = document.createElement("dt");
+          const listId = document.createElement("dd");
+          listId.classList.add("episode");
+          const listCrawl = document.createElement("dd");
+          const listActors = document.createElement("ul");
+          const loader = document.createElement("div");
+          loader.classList.add("lds-circle");
+          loader.innerHTML = "<div></div>";
+
+          list.dataset.id = el.episode_id;
+          listFilm.innerText = el.title;
+          listId.innerText = `Episode ${el.episode_id}`;
+          listCrawl.innerText = el.opening_crawl;
+
+          list.appendChild(listId);
+          list.appendChild(listFilm);
+          list.append(loader);
+          list.appendChild(listCrawl);
+
+          root.appendChild(list);
+
+          getActors(el.characters, listActors, listFilm);
+        });
+      }
+
+      function getActors(data, listActors, listFilm) {
+        let length = data.length;
+        data.forEach((el) => {
+          fetch(el)
+            .then((res) => res.json())
+            .then((data) => {
+              renderActors(data, listActors, listFilm, length);
+            });
+        });
+      }
+
+      function renderActors(data, listActors, listFilm, length) {
+        const listActorsItem = document.createElement("li");
+
+        listActorsItem.innerText = data.name;
+        listActors.append(listActorsItem);
+        if (length === listActors.children.length) {
+          listFilm.nextElementSibling.style.display = "none";
+          listFilm.after(listActors);
+        }
+      }
+    </script>
+  </body>
+</html>
